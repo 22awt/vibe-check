@@ -1165,21 +1165,31 @@ Only return the poem. No title, no explanation.`;
     });
 
     const data = await response.json();
-    const poem = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Could not generate poem.';
 
-    poemBox.innerHTML = '';
-    poem.split('\n').filter(l=>l.trim()).forEach((line, i) => {
-      const p = document.createElement('p');
-      p.className = 'poem-line';
+    if (!response.ok || data.error) {
+      const errMsg = data.error?.message || JSON.stringify(data).substring(0, 200);
+      poemBox.innerHTML = `<p style="color:var(--accent2);font-size:11px">API Error: ${errMsg}</p>`;
+      setStatus("error", "Error");
+      document.getElementById("generateBtn").disabled = false;
+      document.getElementById("generateBtnText").textContent = "u2726 Generate Vibe Poem";
+      return;
+    }
+
+    const poem = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "Could not generate poem.";
+
+    poemBox.innerHTML = "";
+    poem.split("\n").filter(l=>l.trim()).forEach((line, i) => {
+      const p = document.createElement("p");
+      p.className = "poem-line";
       p.textContent = line;
       p.style.animationDelay = `${i*0.18}s`;
       poemBox.appendChild(p);
     });
 
-    setStatus('live', 'Live');
+    setStatus("live", "Live");
   } catch(e) {
-    poemBox.innerHTML = `<p style="color:var(--accent2);font-size:11px">${e.message}</p>`;
-    setStatus('error', 'Error');
+    poemBox.innerHTML = `<p style="color:var(--accent2);font-size:11px">Error: ${e.message}</p>`;
+    setStatus("error", "Error");
   }
 
   document.getElementById('generateBtn').disabled = false;
