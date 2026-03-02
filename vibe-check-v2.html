@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>VIBE CHECK</title>
+<script src="https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.2/dist/face-api.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&display=swap');
+
+:root {
+  --bg: #03020a;
+  --accent: #00ffcc;
+  --accent2: #ff006e;
+  --accent3: #ffbe0b;
+  --text: #f0f0ff;
+  --muted: #44445a;
+  --surface: rgba(255,255,255,0.03);
+  --border: rgba(255,255,255,0.07);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  overflow-x: hidden;
+  min-height: 100vh;
+}
+
+/* ─── PARTICLE CANVAS ─── */
+#particles {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+/* ─── SPLASH SCREEN ─── */
+#splash {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg);
+  transition: opacity 0.8s ease, visibility 0.8s;
+}
+
+#splash.hidden { opacity: 0; visibility: hidden; }
+
+.splash-title {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(72px, 15vw, 160px);
+  font-weight: 800;
+  letter-spacing: -4px;
+  line-height: 0.9;
+  text-align: center;
+  background: linear-gradient(135deg, var(--accent) 0%, #00aaff 50%, var(--accent2) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: titlePulse 3s ease-in-out infinite;
+}
+
+@keyframes titlePulse {
+  0%,100% { filter: brightness(1); }
+  50% { filter: brightness(1.3); }
+}
+
+.splash-sub {
+  margin-top: 20px;
+  font-size: 13px;
+  letter-spacing: 6px;
+  color: var(--muted);
+  text-transform: uppercase;
+  animation: fadeUp 1s 0.5s both;
+}
+
+.splash-btn {
+  margin-top: 50px;
+  padding: 18px 48px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: 'DM Mono', monospace;
+  font-size: 12px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  transition: color 0.3s;
+  animation: fadeUp 1s 1s both;
+}
+
+.splash-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--accent);
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+  z-index: 0;
+}
+
+.splash-btn:hover::before { transform: translateY(0); }
+.splash-btn:hover { color: #000; }
+.splash-btn span { position: relative; z-index: 1; }
+
+.loading-bar {
+  width: 200px;
+  height: 2px;
+  background: var(--border);
+  margin-top: 30px;
+  border-radius: 2px;
+  overflow: hidden;
+  animation: fadeUp 1s 0.3s both;
+}
+
+.loading-bar-fill {
+  height: 100%;
+  background: var(--accent);
+  width: 0%;
+  transition: width 0.3s ease;
+  box-shadow: 0 0 10px var(--accent);
+}
+
+.loading-label {
+  font-size: 10px;
+  color: var(--muted);
+  margin-top: 8px;
+  letter-spacing: 2px;
+  animation: fadeUp 1s 0.3s both;
+}
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── MAIN APP ─── */
+#app {
+  position: relative;
+  z-index: 1;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+  min-height: 100vh;
+}
+
+#app.visible { opacity: 1; }
+
+/* ─── HEADER ─── */
+.header {
+  padding: 24px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(10px);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: rgba(3,2,10,0.8);
+}
+
+.logo {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--accent);
+  text-shadow: 0 0 20px rgba(0,255,204,0.4);
+}
+
+.header-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+
+.pulse-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: all 0.4s;
+}
+.pulse-dot.live { background: var(--accent); animation: livePulse 1.5s infinite; box-shadow: 0 0 10px var(--accent); }
+.pulse-dot.thinking { background: var(--accent3); animation: livePulse 0.4s infinite; box-shadow: 0 0 10px var(--accent3); }
+.pulse-dot.error { background: var(--accent2); box-shadow: 0 0 10px var(--accent2); }
+
+@keyframes livePulse {
+  0%,100% { opacity:1; transform:scale(1); }
+  50% { opacity:0.4; transform:scale(0.7); }
+}
+
+/* ─── MAIN LAYOUT ─── */
+.main {
+  display: grid;
+  grid-template-columns: 1fr 440px;
+  gap: 0;
+  min-height: calc(100vh - 73px);
+}
+
+@media(max-width:900px) {
+  .main { grid-template-columns: 1fr; }
+}
+
+/* ─── LEFT: CAMERA ZONE ─── */
+.camera-zone {
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  border-right: 1px solid var(--border);
+}
+
+.camera-wrapper {
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #000;
+  aspect-ratio: 4/3;
+  box-shadow: 0 0 80px rgba(0,255,204,0.05);
+  transition: box-shadow 0.5s;
+}
+
+.camera-wrapper.detected {
+  box-shadow: 0 0 60px rgba(0,255,204,0.15);
+}
+
+video {
+  width: 100%; height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+canvas#faceOverlay {
+  position: absolute;
+  inset: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+}
+
+/* Scan line effect */
+.camera-wrapper::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--accent), transparent);
+  opacity: 0.5;
+  animation: scanLine 3s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes scanLine {
+  0% { top: 0%; }
+  100% { top: 100%; }
+}
+
+.camera-label {
+  position: absolute;
+  top: 12px; left: 12px;
+  font-size: 9px;
+  letter-spacing: 3px;
+  color: var(--accent);
+  text-transform: uppercase;
+  background: rgba(0,0,0,0.6);
+  padding: 4px 10px;
+  border-radius: 2px;
+  border: 1px solid rgba(0,255,204,0.2);
+}
+
+.camera-label.no-face {
+  color: var(--accent2);
+  border-color: rgba(255,0,110,0.2);
+}
+
+/* ─── EMOTION RADAR ─── */
+.emotion-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.emotion-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 14px 16px;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.4s ease;
+  cursor: default;
+}
+
+.emotion-card.dominant {
+  border-color: rgba(255,255,255,0.15);
+  background: rgba(255,255,255,0.05);
+  transform: scale(1.02);
+}
+
+.emotion-card-glow {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.5s;
+  pointer-events: none;
+}
+
+.emotion-card.dominant .emotion-card-glow { opacity: 0.08; }
+
+.emotion-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+
+.emotion-emoji { font-size: 22px; line-height: 1; }
+.emotion-pct {
+  font-family: 'Syne', sans-serif;
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  transition: color 0.4s;
+}
+
+.emotion-name {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.emotion-bar {
+  height: 3px;
+  background: var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+  margin-top: 8px;
+}
+
+.emotion-bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  width: 0%;
+  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
+}
+
+/* ─── RIGHT PANEL ─── */
+.right-panel {
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 73px);
+  overflow-y: auto;
+  position: sticky;
+  top: 73px;
+}
+
+.right-panel::-webkit-scrollbar { width: 4px; }
+.right-panel::-webkit-scrollbar-track { background: transparent; }
+.right-panel::-webkit-scrollbar-thumb { background: var(--border); }
+
+/* ─── VIBE HERO ─── */
+.vibe-hero {
+  padding: 32px;
+  border-bottom: 1px solid var(--border);
+  position: relative;
+  overflow: hidden;
+  min-height: 160px;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  transition: background 0.8s ease;
+}
+
+.vibe-bg {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+
+.vibe-tag {
+  font-size: 9px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 8px;
+  position: relative;
+}
+
+.vibe-word {
+  font-family: 'Syne', sans-serif;
+  font-size: clamp(42px, 6vw, 64px);
+  font-weight: 800;
+  letter-spacing: -2px;
+  line-height: 1;
+  position: relative;
+  transition: color 0.5s;
+}
+
+.vibe-conf {
+  font-size: 11px;
+  color: var(--muted);
+  margin-top: 8px;
+  position: relative;
+}
+
+/* ─── PALETTE ─── */
+.palette-section {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-label {
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 14px;
+}
+
+.palette-row {
+  display: flex;
+  gap: 8px;
+  height: 48px;
+}
+
+.palette-chip {
+  flex: 1;
+  border-radius: 6px;
+  transition: all 0.7s cubic-bezier(0.4,0,0.2,1);
+  cursor: pointer;
+  position: relative;
+}
+
+.palette-chip:hover { transform: scaleY(1.3); }
+
+.palette-chip-label {
+  position: absolute;
+  bottom: -20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 8px;
+  color: var(--muted);
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.palette-chip:hover .palette-chip-label { opacity: 1; }
+
+/* ─── API KEY ─── */
+.api-section {
+  padding: 24px 32px;
+  border-bottom: 1px solid var(--border);
+}
+
+.api-field {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.api-input {
+  flex: 1;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  padding: 10px 14px;
+  border-radius: 6px;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.api-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,255,204,0.08);
+}
+
+.api-input::placeholder { color: var(--muted); }
+
+/* ─── GENERATE BUTTON ─── */
+.generate-btn {
+  width: calc(100% - 64px);
+  margin: 24px 32px;
+  padding: 18px;
+  background: transparent;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-family: 'DM Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  cursor: pointer;
+  border-radius: 8px;
+  position: relative;
+  overflow: hidden;
+  transition: color 0.3s, transform 0.15s;
+}
+
+.generate-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, var(--accent), #00aaff);
+  transform: translateY(100%);
+  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
+  z-index: 0;
+}
+
+.generate-btn:not(:disabled):hover::before { transform: translateY(0); }
+.generate-btn:not(:disabled):hover { color: #000; }
+.generate-btn:not(:disabled):active { transform: scale(0.98); }
+.generate-btn span { position: relative; z-index: 1; }
+.generate-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+/* ─── POEM SECTION ─── */
+.poem-section {
+  padding: 0 32px 32px;
+  flex: 1;
+}
+
+.poem-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 24px;
+  min-height: 180px;
+  position: relative;
+  overflow: hidden;
+}
+
+.poem-placeholder {
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 2;
+  font-style: italic;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.poem-line {
+  font-size: 14px;
+  line-height: 2;
+  color: var(--text);
+  opacity: 0;
+  transform: translateY(8px);
+  animation: poemLine 0.5s forwards;
+}
+
+@keyframes poemLine {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.poem-scanning {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 30px,
+    rgba(0,255,204,0.02) 30px,
+    rgba(0,255,204,0.02) 31px
+  );
+  animation: poemScan 2s linear infinite;
+}
+
+@keyframes poemScan {
+  0% { background-position: 0 0; }
+  100% { background-position: 0 60px; }
+}
+
+.thinking-text {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--accent3);
+  letter-spacing: 2px;
+  padding: 20px 0;
+}
+
+.thinking-dots span {
+  display: inline-block;
+  width: 4px; height: 4px;
+  border-radius: 50%;
+  background: var(--accent3);
+  animation: dot 1.2s infinite;
+  margin: 0 2px;
+}
+.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes dot {
+  0%,100% { opacity: 0.2; transform: scale(0.8); }
+  50% { opacity: 1; transform: scale(1.2); }
+}
+
+/* ─── MUSIC SECTION ─── */
+.music-section {
+  padding: 0 32px 24px;
+}
+
+.music-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.music-icon {
+  font-size: 28px;
+  line-height: 1;
+  animation: spin 4s linear infinite paused;
+}
+
+.music-icon.playing { animation-play-state: running; }
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.music-info { flex: 1; }
+.music-mood { font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
+.music-rec { font-size: 13px; color: var(--text); }
+
+.music-btn {
+  width: 36px; height: 36px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.music-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+/* ─── HISTORY ─── */
+.history-section {
+  padding: 0 32px 32px;
+}
+
+.history-row {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.history-chip {
+  padding: 4px 12px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  font-size: 10px;
+  letter-spacing: 1px;
+  color: var(--muted);
+  cursor: default;
+  transition: all 0.3s;
+  animation: chipIn 0.3s both;
+}
+
+@keyframes chipIn {
+  from { opacity:0; transform:scale(0.8); }
+  to { opacity:1; transform:scale(1); }
+}
+
+/* ─── FLOATING OVERLAY ─── */
+#emotionOverlay {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%) scale(0.5);
+  z-index: 200;
+  pointer-events: none;
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
+  font-family: 'Syne', sans-serif;
+  font-size: 120px;
+  font-weight: 800;
+  text-align: center;
+}
+
+#emotionOverlay.show {
+  opacity: 1;
+  transform: translate(-50%,-50%) scale(1);
+}
+
+</style>
+</head>
+<body>
+
+<!-- Particle background -->
+<canvas id="particles"></canvas>
+
+<!-- Splash -->
+<div id="splash">
+  <div class="splash-title">VIBE<br>CHECK</div>
+  <div class="splash-sub">AI · Emotion · Mirror</div>
+  <div class="loading-bar"><div class="loading-bar-fill" id="loadingFill"></div></div>
+  <div class="loading-label" id="loadingLabel">Loading face detection models...</div>
+  <button class="splash-btn" id="splashBtn" style="display:none"><span>✦ Start Experience</span></button>
+</div>
+
+<!-- Emotion flash overlay -->
+<div id="emotionOverlay"></div>
+
+<!-- App -->
+<div id="app">
+  <header class="header">
+    <div class="logo">VIBE CHECK</div>
+    <div class="header-status">
+      <div class="pulse-dot" id="pulseDot"></div>
+      <span id="statusText">Initializing</span>
+    </div>
+  </header>
+
+  <div class="main">
+    <!-- LEFT -->
+    <div class="camera-zone">
+      <div class="camera-wrapper" id="cameraWrapper">
+        <video id="video" autoplay muted playsinline></video>
+        <canvas id="faceOverlay"></canvas>
+        <div class="camera-label" id="cameraLabel">INITIALIZING</div>
+      </div>
+
+      <!-- Emotion grid -->
+      <div class="emotion-grid" id="emotionGrid"></div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="right-panel">
+      <!-- Vibe hero -->
+      <div class="vibe-hero" id="vibeHero">
+        <div class="vibe-bg" id="vibeBg"></div>
+        <div class="vibe-tag">Current Vibe</div>
+        <div class="vibe-word" id="vibeWord">—</div>
+        <div class="vibe-conf" id="vibeConf">Waiting for face detection...</div>
+      </div>
+
+      <!-- Palette -->
+      <div class="palette-section">
+        <div class="section-label">Emotional Palette</div>
+        <div class="palette-row" id="paletteRow"></div>
+      </div>
+
+      <!-- Music suggestion -->
+      <div class="music-section">
+        <div class="section-label">Mood Soundtrack</div>
+        <div class="music-box">
+          <div class="music-icon" id="musicIcon">🎵</div>
+          <div class="music-info">
+            <div class="music-mood" id="musicMood">detecting vibe...</div>
+            <div class="music-rec" id="musicRec">—</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- API + Generate -->
+      <div class="api-section">
+        <div class="section-label">Anthropic API Key</div>
+        <div class="api-field">
+          <input class="api-input" type="password" id="apiKey" placeholder="sk-ant-..." />
+        </div>
+      </div>
+
+      <button class="generate-btn" id="generateBtn" disabled>
+        <span id="generateBtnText">✦ Generate Vibe Poem</span>
+      </button>
+
+      <!-- Poem -->
+      <div class="poem-section">
+        <div class="section-label">AI Poem for Your Vibe</div>
+        <div class="poem-box" id="poemBox">
+          <div class="poem-placeholder">Your emotions will be transformed<br>into verse — hit Generate.</div>
+        </div>
+      </div>
+
+      <!-- History -->
+      <div class="history-section">
+        <div class="section-label">Vibe History</div>
+        <div class="history-row" id="historyRow">
+          <span style="font-size:11px;color:var(--muted);font-style:italic">No vibes yet...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ──────────────────────────────────────────────
+// CONFIG
+// ──────────────────────────────────────────────
+const EMOTIONS = {
+  happy:     { emoji:'😄', label:'HAPPY',     color:'#ffbe0b', palette:['#ffbe0b','#ff9500','#fff3b0','#ffd166','#f4a261'], music:'Upbeat Pop / Funk', bg:'rgba(255,190,11,0.06)' },
+  sad:       { emoji:'😢', label:'SAD',       color:'#4895ef', palette:['#4895ef','#3a0ca3','#7209b7','#4361ee','#023e8a'], music:'Ambient / Lo-fi Chill', bg:'rgba(72,149,239,0.06)' },
+  angry:     { emoji:'😠', label:'ANGRY',     color:'#e63946', palette:['#e63946','#9d0208','#dc2f02','#f48c06','#370617'], music:'Heavy Rock / Rage', bg:'rgba(230,57,70,0.06)' },
+  fearful:   { emoji:'😨', label:'FEARFUL',   color:'#b5179e', palette:['#7209b7','#560bad','#3a0ca3','#480ca8','#b5179e'], music:'Dark Ambient / Thriller', bg:'rgba(181,23,158,0.06)' },
+  disgusted: { emoji:'🤢', label:'DISGUSTED', color:'#2dc653', palette:['#2dc653','#006400','#38b000','#70e000','#ccff33'], music:'Industrial / Noise', bg:'rgba(45,198,83,0.06)' },
+  surprised: { emoji:'😲', label:'SURPRISED', color:'#00ffcc', palette:['#00ffcc','#00b4d8','#90e0ef','#caf0f8','#0077b6'], music:'Electronic / Euphoric', bg:'rgba(0,255,204,0.06)' },
+  neutral:   { emoji:'😐', label:'NEUTRAL',   color:'#aaaacc', palette:['#aaaacc','#7b7c8d','#555570','#333344','#1a1a2e'], music:'Classical / Instrumental', bg:'rgba(170,170,204,0.04)' },
+};
+
+let modelsLoaded = false;
+let currentEmotions = null;
+let lastDominant = null;
+let vibeHistory = [];
+let detectionRunning = false;
+
+// ──────────────────────────────────────────────
+// PARTICLES
+// ──────────────────────────────────────────────
+const pCanvas = document.getElementById('particles');
+const pCtx = pCanvas.getContext('2d');
+let particles = [];
+
+function resizeParticles() {
+  pCanvas.width = window.innerWidth;
+  pCanvas.height = window.innerHeight;
+}
+
+function initParticles() {
+  resizeParticles();
+  particles = Array.from({length:80}, () => ({
+    x: Math.random() * pCanvas.width,
+    y: Math.random() * pCanvas.height,
+    r: Math.random() * 1.5 + 0.3,
+    vx: (Math.random()-0.5) * 0.3,
+    vy: (Math.random()-0.5) * 0.3,
+    a: Math.random() * 0.4 + 0.1,
+    color: ['#00ffcc','#4895ef','#b5179e','#ffbe0b'][Math.floor(Math.random()*4)]
+  }));
+}
+
+function drawParticles() {
+  pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
+  particles.forEach(p => {
+    p.x += p.vx; p.y += p.vy;
+    if(p.x<0) p.x=pCanvas.width; if(p.x>pCanvas.width) p.x=0;
+    if(p.y<0) p.y=pCanvas.height; if(p.y>pCanvas.height) p.y=0;
+    pCtx.beginPath();
+    pCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    pCtx.fillStyle = p.color + Math.floor(p.a*255).toString(16).padStart(2,'0');
+    pCtx.fill();
+  });
+  requestAnimationFrame(drawParticles);
+}
+
+initParticles();
+drawParticles();
+window.addEventListener('resize', resizeParticles);
+
+// ──────────────────────────────────────────────
+// BUILD EMOTION GRID
+// ──────────────────────────────────────────────
+function buildEmotionGrid() {
+  const grid = document.getElementById('emotionGrid');
+  grid.innerHTML = '';
+  Object.entries(EMOTIONS).forEach(([key, meta]) => {
+    const card = document.createElement('div');
+    card.className = 'emotion-card';
+    card.id = `card-${key}`;
+    card.innerHTML = `
+      <div class="emotion-card-glow" id="glow-${key}" style="background:${meta.color}"></div>
+      <div class="emotion-card-top">
+        <span class="emotion-emoji">${meta.emoji}</span>
+        <span class="emotion-pct" id="pct-${key}" style="color:${meta.color}">0%</span>
+      </div>
+      <div class="emotion-name">${meta.label}</div>
+      <div class="emotion-bar">
+        <div class="emotion-bar-fill" id="bar-${key}" style="background:${meta.color}; width:0%"></div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+buildEmotionGrid();
+
+// Build initial palette
+function buildPalette(colors) {
+  const row = document.getElementById('paletteRow');
+  row.innerHTML = '';
+  colors.forEach(c => {
+    const chip = document.createElement('div');
+    chip.className = 'palette-chip';
+    chip.style.background = c;
+    chip.title = c;
+    chip.innerHTML = `<span class="palette-chip-label">${c}</span>`;
+    chip.addEventListener('click', () => {
+      navigator.clipboard?.writeText(c);
+      chip.style.transform = 'scaleY(1.5)';
+      setTimeout(() => chip.style.transform = '', 300);
+    });
+    row.appendChild(chip);
+  });
+}
+buildPalette(['#111118','#151520','#1a1a2e','#0d0d14','#050508']);
+
+// ──────────────────────────────────────────────
+// LOAD MODELS
+// ──────────────────────────────────────────────
+async function loadModels() {
+  const fill = document.getElementById('loadingFill');
+  const label = document.getElementById('loadingLabel');
+
+  const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.2/model/';
+
+  try {
+    label.textContent = 'Loading detector...';
+    fill.style.width = '20%';
+    await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
+
+    fill.style.width = '70%';
+    label.textContent = 'Loading expression model...';
+    await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
+
+    fill.style.width = '100%';
+    label.textContent = 'Ready!';
+    modelsLoaded = true;
+
+    setTimeout(() => {
+      document.getElementById('splashBtn').style.display = 'block';
+      label.style.color = 'var(--accent)';
+    }, 400);
+
+  } catch(e) {
+    label.textContent = '⚠ Failed to load models. Refresh page.';
+    label.style.color = 'var(--accent2)';
+  }
+}
+
+document.getElementById('splashBtn').addEventListener('click', async () => {
+  document.getElementById('splash').classList.add('hidden');
+  document.getElementById('app').classList.add('visible');
+  await startCamera();
+});
+
+// ──────────────────────────────────────────────
+// CAMERA
+// ──────────────────────────────────────────────
+async function startCamera() {
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({ video: { width:640, height:480, facingMode:'user' } });
+    const video = document.getElementById('video');
+    video.srcObject = stream;
+    video.onloadedmetadata = () => {
+      const ov = document.getElementById('faceOverlay');
+      ov.width = video.videoWidth;
+      ov.height = video.videoHeight;
+      startDetection();
+    };
+  } catch(e) {
+    setStatus('error', 'Camera denied');
+    document.getElementById('cameraLabel').textContent = '⚠ CAMERA DENIED';
+    document.getElementById('cameraLabel').classList.add('no-face');
+  }
+}
+
+// ──────────────────────────────────────────────
+// DETECTION LOOP
+// ──────────────────────────────────────────────
+async function startDetection() {
+  const video = document.getElementById('video');
+  const ov = document.getElementById('faceOverlay');
+  const ctx2 = ov.getContext('2d');
+  detectionRunning = true;
+
+  setStatus('live', 'Live');
+
+  const detect = async () => {
+    if (!detectionRunning) return;
+
+    const result = await faceapi
+      .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.4 }))
+      .withFaceExpressions();
+
+    ctx2.clearRect(0,0,ov.width,ov.height);
+
+    if (result) {
+      currentEmotions = result.expressions;
+      const dominant = getDominant(result.expressions);
+      const meta = EMOTIONS[dominant.key];
+
+      document.getElementById('cameraWrapper').classList.add('detected');
+      document.getElementById('cameraLabel').textContent = '● FACE DETECTED';
+      document.getElementById('cameraLabel').classList.remove('no-face');
+      document.getElementById('generateBtn').disabled = false;
+
+      // Draw face box
+      drawFaceBox(ctx2, result.detection.box, meta.color, dominant.key);
+
+      // Update emotion cards
+      Object.entries(result.expressions).forEach(([key, val]) => {
+        const pct = document.getElementById(`pct-${key}`);
+        const bar = document.getElementById(`bar-${key}`);
+        const card = document.getElementById(`card-${key}`);
+        if (pct) pct.textContent = (val*100).toFixed(0) + '%';
+        if (bar) bar.style.width = (val*100).toFixed(1) + '%';
+        if (card) card.classList.toggle('dominant', key === dominant.key);
+      });
+
+      // Update vibe hero
+      document.getElementById('vibeWord').textContent = meta.label;
+      document.getElementById('vibeWord').style.color = meta.color;
+      document.getElementById('vibeConf').textContent = `${(dominant.val*100).toFixed(1)}% confidence`;
+      document.getElementById('vibeBg').style.background = `radial-gradient(ellipse at center, ${meta.color}22 0%, transparent 70%)`;
+      document.getElementById('vibeBg').style.opacity = '1';
+
+      // Update palette live
+      buildPalette(meta.palette);
+
+      // Update music
+      document.getElementById('musicMood').textContent = meta.label;
+      document.getElementById('musicRec').textContent = meta.music;
+      document.getElementById('musicIcon').textContent = meta.emoji;
+
+      // Flash on dominant change
+      if (lastDominant !== dominant.key) {
+        flashEmotion(meta.emoji, meta.color);
+        lastDominant = dominant.key;
+      }
+
+    } else {
+      currentEmotions = null;
+      document.getElementById('cameraWrapper').classList.remove('detected');
+      document.getElementById('cameraLabel').textContent = '○ NO FACE DETECTED';
+      document.getElementById('cameraLabel').classList.add('no-face');
+      document.getElementById('generateBtn').disabled = true;
+
+      // Reset bars
+      Object.keys(EMOTIONS).forEach(key => {
+        const pct = document.getElementById(`pct-${key}`);
+        const bar = document.getElementById(`bar-${key}`);
+        const card = document.getElementById(`card-${key}`);
+        if (pct) pct.textContent = '0%';
+        if (bar) bar.style.width = '0%';
+        if (card) card.classList.remove('dominant');
+      });
+    }
+
+    setTimeout(detect, 150);
+  };
+
+  detect();
+}
+
+function drawFaceBox(ctx2, box, color, emotion) {
+  const {x,y,width,height} = box;
+  const cs = 18;
+
+  ctx2.strokeStyle = color;
+  ctx2.lineWidth = 1.5;
+  ctx2.shadowColor = color;
+  ctx2.shadowBlur = 12;
+
+  // Dashed box
+  ctx2.setLineDash([6,4]);
+  ctx2.strokeRect(x,y,width,height);
+  ctx2.setLineDash([]);
+
+  // Corner marks
+  ctx2.lineWidth = 3;
+  ctx2.shadowBlur = 20;
+  [[x,y,1,1],[x+width,y,-1,1],[x,y+height,1,-1],[x+width,y+height,-1,-1]].forEach(([px,py,sx,sy]) => {
+    ctx2.beginPath();
+    ctx2.moveTo(px+sx*cs,py);
+    ctx2.lineTo(px,py);
+    ctx2.lineTo(px,py+sy*cs);
+    ctx2.stroke();
+  });
+
+  ctx2.shadowBlur = 0;
+}
+
+function getDominant(expressions) {
+  let max = 0, key = 'neutral';
+  Object.entries(expressions).forEach(([k,v]) => { if(v>max){max=v;key=k;} });
+  return { key, val: max };
+}
+
+// ──────────────────────────────────────────────
+// EMOTION FLASH
+// ──────────────────────────────────────────────
+function flashEmotion(emoji, color) {
+  const el = document.getElementById('emotionOverlay');
+  el.textContent = emoji;
+  el.style.textShadow = `0 0 60px ${color}`;
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 600);
+}
+
+// ──────────────────────────────────────────────
+// STATUS
+// ──────────────────────────────────────────────
+function setStatus(state, text) {
+  const dot = document.getElementById('pulseDot');
+  const label = document.getElementById('statusText');
+  dot.className = `pulse-dot ${state}`;
+  label.textContent = text;
+}
+
+// ──────────────────────────────────────────────
+// GENERATE POEM
+// ──────────────────────────────────────────────
+document.getElementById('generateBtn').addEventListener('click', async () => {
+  if (!currentEmotions) return;
+  const apiKey = document.getElementById('apiKey').value.trim();
+  if (!apiKey) { alert('Please enter your Anthropic API key.'); return; }
+
+  const dominant = getDominant(currentEmotions);
+  const meta = EMOTIONS[dominant.key];
+
+  const emotionData = Object.entries(currentEmotions)
+    .sort((a,b) => b[1]-a[1])
+    .map(([e,v]) => `${e}: ${(v*100).toFixed(1)}%`)
+    .join(', ');
+
+  // Add to history
+  addToHistory(dominant.key, meta);
+
+  // Update UI
+  const poemBox = document.getElementById('poemBox');
+  poemBox.innerHTML = `
+    <div class="poem-scanning"></div>
+    <div class="thinking-text">
+      <div class="thinking-dots"><span></span><span></span><span></span></div>
+      READING YOUR VIBE
+    </div>
+  `;
+
+  setStatus('thinking', 'Generating');
+  document.getElementById('generateBtn').disabled = true;
+  document.getElementById('generateBtnText').textContent = '⟳ Generating...';
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 300,
+        messages: [{
+          role: 'user',
+          content: `You are a synesthetic poet. Based on this real-time emotional analysis of someone's face, write a short evocative poem (5–7 lines). Make it vivid and slightly abstract — never name the emotions directly. Each line should feel like a different sense (sight, sound, texture, temperature, movement).
+
+Emotional data: ${emotionData}
+Dominant: ${dominant.key} at ${(dominant.val*100).toFixed(1)}%
+
+Only return the poem. No title, no explanation.`
+        }]
+      })
+    });
+
+    const data = await response.json();
+    const poem = data.content?.[0]?.text?.trim() || 'Could not generate poem.';
+
+    poemBox.innerHTML = '';
+    poem.split('\n').filter(l=>l.trim()).forEach((line, i) => {
+      const p = document.createElement('p');
+      p.className = 'poem-line';
+      p.textContent = line;
+      p.style.animationDelay = `${i*0.18}s`;
+      poemBox.appendChild(p);
+    });
+
+    setStatus('live', 'Live');
+  } catch(e) {
+    poemBox.innerHTML = `<p style="color:var(--accent2);font-size:11px">${e.message}</p>`;
+    setStatus('error', 'Error');
+  }
+
+  document.getElementById('generateBtn').disabled = false;
+  document.getElementById('generateBtnText').textContent = '✦ Generate Vibe Poem';
+});
+
+// ──────────────────────────────────────────────
+// HISTORY
+// ──────────────────────────────────────────────
+function addToHistory(key, meta) {
+  vibeHistory.unshift({ key, meta, time: new Date().toLocaleTimeString() });
+  if (vibeHistory.length > 10) vibeHistory.pop();
+
+  const row = document.getElementById('historyRow');
+  row.innerHTML = '';
+  vibeHistory.forEach((v,i) => {
+    const chip = document.createElement('div');
+    chip.className = 'history-chip';
+    chip.style.borderColor = v.meta.color + '44';
+    chip.style.color = v.meta.color;
+    chip.style.animationDelay = `${i*0.05}s`;
+    chip.title = v.time;
+    chip.textContent = `${v.meta.emoji} ${v.meta.label}`;
+    row.appendChild(chip);
+  });
+}
+
+// ──────────────────────────────────────────────
+// KICK OFF
+// ──────────────────────────────────────────────
+loadModels();
+</script>
+</body>
+</html>
