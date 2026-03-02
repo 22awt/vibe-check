@@ -777,13 +777,7 @@ canvas#faceOverlay {
         </div>
       </div>
 
-      <!-- API + Generate -->
-      <div class="api-section">
-        <div class="section-label">Anthropic API Key</div>
-        <div class="api-field">
-          <input class="api-input" type="password" id="apiKey" placeholder="sk-ant-..." />
-        </div>
-      </div>
+      <!-- No API key needed -->
 
       <button class="generate-btn" id="generateBtn" disabled>
         <span id="generateBtnText">✦ Generate Vibe Poem</span>
@@ -1126,8 +1120,8 @@ function setStatus(state, text) {
 // ──────────────────────────────────────────────
 document.getElementById('generateBtn').addEventListener('click', async () => {
   if (!currentEmotions) return;
-  const apiKey = document.getElementById('apiKey').value.trim();
-  if (!apiKey) { alert('Please enter your Anthropic API key.'); return; }
+
+  const GEMINI_API_KEY = 'AIzaSyAsBaTOsfGf_JimcbchBvHZIqiWKjvJ3tQ';
 
   const dominant = getDominant(currentEmotions);
   const meta = EMOTIONS[dominant.key];
@@ -1155,31 +1149,23 @@ document.getElementById('generateBtn').addEventListener('click', async () => {
   document.getElementById('generateBtnText').textContent = '⟳ Generating...';
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': apiKey,
-        'anthropic-version': '2023-06-01',
-        'anthropic-dangerous-direct-browser-access': 'true'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 300,
-        messages: [{
-          role: 'user',
-          content: `You are a synesthetic poet. Based on this real-time emotional analysis of someone's face, write a short evocative poem (5–7 lines). Make it vivid and slightly abstract — never name the emotions directly. Each line should feel like a different sense (sight, sound, texture, temperature, movement).
+    const prompt = `You are a synesthetic poet. Based on this real-time emotional analysis of someone's face, write a short evocative poem (5–7 lines). Make it vivid and slightly abstract — never name the emotions directly. Each line should feel like a different sense (sight, sound, texture, temperature, movement).
 
 Emotional data: ${emotionData}
 Dominant: ${dominant.key} at ${(dominant.val*100).toFixed(1)}%
 
-Only return the poem. No title, no explanation.`
-        }]
+Only return the poem. No title, no explanation.`;
+
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ parts: [{ text: prompt }] }]
       })
     });
 
     const data = await response.json();
-    const poem = data.content?.[0]?.text?.trim() || 'Could not generate poem.';
+    const poem = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || 'Could not generate poem.';
 
     poemBox.innerHTML = '';
     poem.split('\n').filter(l=>l.trim()).forEach((line, i) => {
