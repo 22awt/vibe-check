@@ -20,701 +20,137 @@
 }
 
 * { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'DM Mono',monospace; overflow-x:hidden; min-height:100vh; }
+#particles { position:fixed; inset:0; z-index:0; pointer-events:none; }
 
-body {
-  background: var(--bg);
-  color: var(--text);
-  font-family: 'DM Mono', monospace;
-  overflow-x: hidden;
-  min-height: 100vh;
-}
-
-/* ─── PARTICLE CANVAS ─── */
-#particles {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-}
-
-/* ─── SPLASH SCREEN ─── */
 #splash {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: var(--bg);
-  transition: opacity 0.8s ease, visibility 0.8s;
+  position:fixed; inset:0; z-index:100;
+  display:flex; flex-direction:column; align-items:center; justify-content:center;
+  background:var(--bg); transition:opacity 0.8s ease, visibility 0.8s;
 }
-
-#splash.hidden { opacity: 0; visibility: hidden; }
+#splash.hidden { opacity:0; visibility:hidden; pointer-events:none; }
 
 .splash-title {
-  font-family: 'Syne', sans-serif;
-  font-size: clamp(72px, 15vw, 160px);
-  font-weight: 800;
-  letter-spacing: -4px;
-  line-height: 0.9;
-  text-align: center;
-  background: linear-gradient(135deg, var(--accent) 0%, #00aaff 50%, var(--accent2) 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  animation: titlePulse 3s ease-in-out infinite;
+  font-family:'Syne',sans-serif;
+  font-size:clamp(72px,15vw,160px); font-weight:800; letter-spacing:-4px; line-height:0.9; text-align:center;
+  background:linear-gradient(135deg,var(--accent) 0%,#00aaff 50%,var(--accent2) 100%);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+  animation:titlePulse 3s ease-in-out infinite;
 }
-
-@keyframes titlePulse {
-  0%,100% { filter: brightness(1); }
-  50% { filter: brightness(1.3); }
-}
-
-.splash-sub {
-  margin-top: 20px;
-  font-size: 13px;
-  letter-spacing: 6px;
-  color: var(--muted);
-  text-transform: uppercase;
-  animation: fadeUp 1s 0.5s both;
-}
-
+@keyframes titlePulse { 0%,100%{filter:brightness(1)} 50%{filter:brightness(1.3)} }
+.splash-sub { margin-top:20px; font-size:13px; letter-spacing:6px; color:var(--muted); text-transform:uppercase; animation:fadeUp 1s 0.5s both; }
 .splash-btn {
-  margin-top: 50px;
-  padding: 18px 48px;
-  background: transparent;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  font-family: 'DM Mono', monospace;
-  font-size: 12px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  cursor: pointer;
-  position: relative;
-  overflow: hidden;
-  transition: color 0.3s;
-  animation: fadeUp 1s 1s both;
-}
-
-.splash-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: var(--accent);
-  transform: translateY(100%);
-  transition: transform 0.3s ease;
-  z-index: 0;
-}
-
-.splash-btn:hover::before { transform: translateY(0); }
-.splash-btn:hover { color: #000; }
-.splash-btn span { position: relative; z-index: 1; }
-
-.loading-bar {
-  width: 200px;
-  height: 2px;
-  background: var(--border);
-  margin-top: 30px;
-  border-radius: 2px;
-  overflow: hidden;
-  animation: fadeUp 1s 0.3s both;
-}
-
-.loading-bar-fill {
-  height: 100%;
-  background: var(--accent);
-  width: 0%;
-  transition: width 0.3s ease;
-  box-shadow: 0 0 10px var(--accent);
-}
-
-.loading-label {
-  font-size: 10px;
-  color: var(--muted);
-  margin-top: 8px;
-  letter-spacing: 2px;
-  animation: fadeUp 1s 0.3s both;
-}
-
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(20px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-
-/* ─── MAIN APP ─── */
-#app {
-  position: relative;
-  z-index: 1;
-  opacity: 0;
-  transition: opacity 0.8s ease;
-  min-height: 100vh;
-}
-
-#app.visible { opacity: 1; }
-
-/* ─── HEADER ─── */
-.header {
-  padding: 24px 40px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  border-bottom: 1px solid var(--border);
-  backdrop-filter: blur(10px);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-  background: rgba(3,2,10,0.8);
-}
-
-.logo {
-  font-family: 'Syne', sans-serif;
-  font-size: 22px;
-  font-weight: 800;
-  letter-spacing: 3px;
-  color: var(--accent);
-  text-shadow: 0 0 20px rgba(0,255,204,0.4);
-}
-
-.header-status {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 10px;
-  letter-spacing: 2px;
-  color: var(--muted);
-  text-transform: uppercase;
-}
-
-.pulse-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  background: var(--muted);
-  transition: all 0.4s;
-}
-.pulse-dot.live { background: var(--accent); animation: livePulse 1.5s infinite; box-shadow: 0 0 10px var(--accent); }
-.pulse-dot.thinking { background: var(--accent3); animation: livePulse 0.4s infinite; box-shadow: 0 0 10px var(--accent3); }
-.pulse-dot.error { background: var(--accent2); box-shadow: 0 0 10px var(--accent2); }
-
-@keyframes livePulse {
-  0%,100% { opacity:1; transform:scale(1); }
-  50% { opacity:0.4; transform:scale(0.7); }
-}
-
-/* ─── MAIN LAYOUT ─── */
-.main {
-  display: grid;
-  grid-template-columns: 1fr 440px;
-  gap: 0;
-  min-height: calc(100vh - 73px);
-}
-
-@media(max-width:900px) {
-  .main { grid-template-columns: 1fr; }
-}
-
-/* ─── LEFT: CAMERA ZONE ─── */
-.camera-zone {
-  padding: 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
-  border-right: 1px solid var(--border);
-}
-
-.camera-wrapper {
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #000;
-  aspect-ratio: 4/3;
-  box-shadow: 0 0 80px rgba(0,255,204,0.05);
-  transition: box-shadow 0.5s;
-}
-
-.camera-wrapper.detected {
-  box-shadow: 0 0 60px rgba(0,255,204,0.15);
-}
-
-video {
-  width: 100%; height: 100%;
-  object-fit: cover;
-  display: block;
-}
-
-canvas#faceOverlay {
-  position: absolute;
-  inset: 0;
-  width: 100%; height: 100%;
-  pointer-events: none;
-}
-
-/* Scan line effect */
-.camera-wrapper::after {
-  content: '';
-  position: absolute;
-  left: 0; right: 0;
-  height: 2px;
-  background: linear-gradient(90deg, transparent, var(--accent), transparent);
-  opacity: 0.5;
-  animation: scanLine 3s linear infinite;
-  pointer-events: none;
-}
-
-@keyframes scanLine {
-  0% { top: 0%; }
-  100% { top: 100%; }
-}
-
-.camera-label {
-  position: absolute;
-  top: 12px; left: 12px;
-  font-size: 9px;
-  letter-spacing: 3px;
-  color: var(--accent);
-  text-transform: uppercase;
-  background: rgba(0,0,0,0.6);
-  padding: 4px 10px;
-  border-radius: 2px;
-  border: 1px solid rgba(0,255,204,0.2);
-}
-
-.camera-label.no-face {
-  color: var(--accent2);
-  border-color: rgba(255,0,110,0.2);
-}
-
-/* ─── EMOTION RADAR ─── */
-.emotion-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 10px;
-}
-
-.emotion-card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 8px;
-  padding: 14px 16px;
-  position: relative;
-  overflow: hidden;
-  transition: all 0.4s ease;
-  cursor: default;
-}
-
-.emotion-card.dominant {
-  border-color: rgba(255,255,255,0.15);
-  background: rgba(255,255,255,0.05);
-  transform: scale(1.02);
-}
-
-.emotion-card-glow {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.5s;
-  pointer-events: none;
-}
-
-.emotion-card.dominant .emotion-card-glow { opacity: 0.08; }
-
-.emotion-card-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 10px;
-}
-
-.emotion-emoji { font-size: 22px; line-height: 1; }
-.emotion-pct {
-  font-family: 'Syne', sans-serif;
-  font-size: 22px;
-  font-weight: 700;
-  line-height: 1;
-  transition: color 0.4s;
-}
-
-.emotion-name {
-  font-size: 9px;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.emotion-bar {
-  height: 3px;
-  background: var(--border);
-  border-radius: 2px;
-  overflow: hidden;
-  margin-top: 8px;
-}
-
-.emotion-bar-fill {
-  height: 100%;
-  border-radius: 2px;
-  width: 0%;
-  transition: width 0.5s cubic-bezier(0.4,0,0.2,1);
-}
-
-/* ─── RIGHT PANEL ─── */
-.right-panel {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 73px);
-  overflow-y: auto;
-  position: sticky;
-  top: 73px;
-}
-
-.right-panel::-webkit-scrollbar { width: 4px; }
-.right-panel::-webkit-scrollbar-track { background: transparent; }
-.right-panel::-webkit-scrollbar-thumb { background: var(--border); }
-
-/* ─── VIBE HERO ─── */
-.vibe-hero {
-  padding: 32px;
-  border-bottom: 1px solid var(--border);
-  position: relative;
-  overflow: hidden;
-  min-height: 160px;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  transition: background 0.8s ease;
-}
-
-.vibe-bg {
-  position: absolute;
-  inset: 0;
-  opacity: 0;
-  transition: opacity 0.8s ease;
-}
-
-.vibe-tag {
-  font-size: 9px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 8px;
-  position: relative;
-}
-
-.vibe-word {
-  font-family: 'Syne', sans-serif;
-  font-size: clamp(42px, 6vw, 64px);
-  font-weight: 800;
-  letter-spacing: -2px;
-  line-height: 1;
-  position: relative;
-  transition: color 0.5s;
-}
-
-.vibe-conf {
-  font-size: 11px;
-  color: var(--muted);
-  margin-top: 8px;
-  position: relative;
-}
-
-/* ─── PALETTE ─── */
-.palette-section {
-  padding: 24px 32px;
-  border-bottom: 1px solid var(--border);
-}
-
-.section-label {
-  font-size: 9px;
-  letter-spacing: 3px;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin-bottom: 14px;
-}
-
-.palette-row {
-  display: flex;
-  gap: 8px;
-  height: 48px;
-}
-
-.palette-chip {
-  flex: 1;
-  border-radius: 6px;
-  transition: all 0.7s cubic-bezier(0.4,0,0.2,1);
-  cursor: pointer;
-  position: relative;
-}
-
-.palette-chip:hover { transform: scaleY(1.3); }
-
-.palette-chip-label {
-  position: absolute;
-  bottom: -20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 8px;
-  color: var(--muted);
-  white-space: nowrap;
-  opacity: 0;
-  transition: opacity 0.2s;
-}
-
-.palette-chip:hover .palette-chip-label { opacity: 1; }
-
-/* ─── API KEY ─── */
-.api-section {
-  padding: 24px 32px;
-  border-bottom: 1px solid var(--border);
-}
-
-.api-field {
-  display: flex;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.api-input {
-  flex: 1;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  color: var(--text);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  padding: 10px 14px;
-  border-radius: 6px;
-  outline: none;
-  transition: border-color 0.2s, box-shadow 0.2s;
-}
-
-.api-input:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(0,255,204,0.08);
-}
-
-.api-input::placeholder { color: var(--muted); }
-
-/* ─── GENERATE BUTTON ─── */
-.generate-btn {
-  width: calc(100% - 64px);
-  margin: 24px 32px;
-  padding: 18px;
-  background: transparent;
-  border: 1px solid var(--accent);
-  color: var(--accent);
-  font-family: 'DM Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
-  cursor: pointer;
-  border-radius: 8px;
-  position: relative;
-  overflow: hidden;
-  transition: color 0.3s, transform 0.15s;
-}
-
-.generate-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(135deg, var(--accent), #00aaff);
-  transform: translateY(100%);
-  transition: transform 0.35s cubic-bezier(0.4,0,0.2,1);
-  z-index: 0;
-}
-
-.generate-btn:not(:disabled):hover::before { transform: translateY(0); }
-.generate-btn:not(:disabled):hover { color: #000; }
-.generate-btn:not(:disabled):active { transform: scale(0.98); }
-.generate-btn span { position: relative; z-index: 1; }
-.generate-btn:disabled { opacity: 0.3; cursor: not-allowed; }
-
-/* ─── POEM SECTION ─── */
-.poem-section {
-  padding: 0 32px 32px;
-  flex: 1;
-}
-
-.poem-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 24px;
-  min-height: 180px;
-  position: relative;
-  overflow: hidden;
-}
-
-.poem-placeholder {
-  font-size: 12px;
-  color: var(--muted);
-  line-height: 2;
-  font-style: italic;
-  text-align: center;
-  padding: 20px 0;
-}
-
-.poem-line {
-  font-size: 14px;
-  line-height: 2;
-  color: var(--text);
-  opacity: 0;
-  transform: translateY(8px);
-  animation: poemLine 0.5s forwards;
-}
-
-@keyframes poemLine {
-  to { opacity: 1; transform: translateY(0); }
-}
-
-.poem-scanning {
-  position: absolute;
-  inset: 0;
-  background: repeating-linear-gradient(
-    0deg,
-    transparent,
-    transparent 30px,
-    rgba(0,255,204,0.02) 30px,
-    rgba(0,255,204,0.02) 31px
-  );
-  animation: poemScan 2s linear infinite;
-}
-
-@keyframes poemScan {
-  0% { background-position: 0 0; }
-  100% { background-position: 0 60px; }
-}
-
-.thinking-text {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 11px;
-  color: var(--accent3);
-  letter-spacing: 2px;
-  padding: 20px 0;
-}
-
-.thinking-dots span {
-  display: inline-block;
-  width: 4px; height: 4px;
-  border-radius: 50%;
-  background: var(--accent3);
-  animation: dot 1.2s infinite;
-  margin: 0 2px;
-}
-.thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
-.thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes dot {
-  0%,100% { opacity: 0.2; transform: scale(0.8); }
-  50% { opacity: 1; transform: scale(1.2); }
-}
-
-/* ─── MUSIC SECTION ─── */
-.music-section {
-  padding: 0 32px 24px;
-}
-
-.music-box {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: 10px;
-  padding: 20px;
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.music-icon {
-  font-size: 28px;
-  line-height: 1;
-  animation: spin 4s linear infinite paused;
-}
-
-.music-icon.playing { animation-play-state: running; }
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-.music-info { flex: 1; }
-.music-mood { font-size: 11px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 4px; }
-.music-rec { font-size: 13px; color: var(--text); }
-
-.music-btn {
-  width: 36px; height: 36px;
-  border-radius: 50%;
-  background: transparent;
-  border: 1px solid var(--border);
-  color: var(--text);
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 14px;
-  transition: all 0.2s;
-  flex-shrink: 0;
-}
-
-.music-btn:hover { border-color: var(--accent); color: var(--accent); }
-
-/* ─── HISTORY ─── */
-.history-section {
-  padding: 0 32px 32px;
-}
-
-.history-row {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
-  margin-top: 12px;
-}
-
-.history-chip {
-  padding: 4px 12px;
-  border-radius: 20px;
-  border: 1px solid var(--border);
-  font-size: 10px;
-  letter-spacing: 1px;
-  color: var(--muted);
-  cursor: default;
-  transition: all 0.3s;
-  animation: chipIn 0.3s both;
-}
-
-@keyframes chipIn {
-  from { opacity:0; transform:scale(0.8); }
-  to { opacity:1; transform:scale(1); }
-}
-
-/* ─── FLOATING OVERLAY ─── */
-#emotionOverlay {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%,-50%) scale(0.5);
-  z-index: 200;
-  pointer-events: none;
-  opacity: 0;
-  transition: all 0.4s cubic-bezier(0.34,1.56,0.64,1);
-  font-family: 'Syne', sans-serif;
-  font-size: 120px;
-  font-weight: 800;
-  text-align: center;
-}
-
-#emotionOverlay.show {
-  opacity: 1;
-  transform: translate(-50%,-50%) scale(1);
-}
+  margin-top:50px; padding:18px 48px; background:transparent;
+  border:1px solid var(--accent); color:var(--accent);
+  font-family:'DM Mono',monospace; font-size:12px; letter-spacing:4px; text-transform:uppercase;
+  cursor:pointer; position:relative; overflow:hidden; transition:color 0.3s; animation:fadeUp 1s 1s both;
+}
+.splash-btn::before { content:''; position:absolute; inset:0; background:var(--accent); transform:translateY(100%); transition:transform 0.3s ease; z-index:0; }
+.splash-btn:hover::before { transform:translateY(0); }
+.splash-btn:hover { color:#000; }
+.splash-btn span { position:relative; z-index:1; }
+.loading-bar { width:200px; height:2px; background:var(--border); margin-top:30px; border-radius:2px; overflow:hidden; animation:fadeUp 1s 0.3s both; }
+.loading-bar-fill { height:100%; background:var(--accent); width:0%; transition:width 0.3s ease; box-shadow:0 0 10px var(--accent); }
+.loading-label { font-size:10px; color:var(--muted); margin-top:8px; letter-spacing:2px; animation:fadeUp 1s 0.3s both; }
+@keyframes fadeUp { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
+
+#app { position:relative; z-index:1; opacity:0; transition:opacity 0.8s ease; min-height:100vh; }
+#app.visible { opacity:1; }
+
+.header { padding:24px 40px; display:flex; align-items:center; justify-content:space-between; border-bottom:1px solid var(--border); backdrop-filter:blur(10px); position:sticky; top:0; z-index:10; background:rgba(3,2,10,0.8); }
+.logo { font-family:'Syne',sans-serif; font-size:22px; font-weight:800; letter-spacing:3px; color:var(--accent); text-shadow:0 0 20px rgba(0,255,204,0.4); }
+.header-status { display:flex; align-items:center; gap:8px; font-size:10px; letter-spacing:2px; color:var(--muted); text-transform:uppercase; }
+.pulse-dot { width:8px; height:8px; border-radius:50%; background:var(--muted); transition:all 0.4s; }
+.pulse-dot.live { background:var(--accent); animation:livePulse 1.5s infinite; box-shadow:0 0 10px var(--accent); }
+.pulse-dot.thinking { background:var(--accent3); animation:livePulse 0.4s infinite; box-shadow:0 0 10px var(--accent3); }
+@keyframes livePulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.4;transform:scale(0.7)} }
+
+.main { display:grid; grid-template-columns:1fr 440px; gap:0; min-height:calc(100vh - 73px); }
+@media(max-width:900px) { .main { grid-template-columns:1fr; } }
+
+.camera-zone { padding:40px; display:flex; flex-direction:column; gap:32px; border-right:1px solid var(--border); }
+.camera-wrapper { position:relative; border-radius:12px; overflow:hidden; background:#000; aspect-ratio:4/3; box-shadow:0 0 80px rgba(0,255,204,0.05); transition:box-shadow 0.5s; }
+.camera-wrapper.detected { box-shadow:0 0 60px rgba(0,255,204,0.15); }
+video { width:100%; height:100%; object-fit:cover; display:block; }
+canvas#faceOverlay { position:absolute; inset:0; width:100%; height:100%; pointer-events:none; }
+.camera-wrapper::after { content:''; position:absolute; left:0; right:0; height:2px; background:linear-gradient(90deg,transparent,var(--accent),transparent); opacity:0.5; animation:scanLine 3s linear infinite; pointer-events:none; }
+@keyframes scanLine { 0%{top:0%} 100%{top:100%} }
+.camera-label { position:absolute; top:12px; left:12px; font-size:9px; letter-spacing:3px; color:var(--accent); text-transform:uppercase; background:rgba(0,0,0,0.6); padding:4px 10px; border-radius:2px; border:1px solid rgba(0,255,204,0.2); }
+.camera-label.no-face { color:var(--accent2); border-color:rgba(255,0,110,0.2); }
+
+.emotion-grid { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.emotion-card { background:var(--surface); border:1px solid var(--border); border-radius:8px; padding:14px 16px; position:relative; overflow:hidden; transition:all 0.4s ease; }
+.emotion-card.dominant { border-color:rgba(255,255,255,0.15); background:rgba(255,255,255,0.05); transform:scale(1.02); }
+.emotion-card-glow { position:absolute; inset:0; opacity:0; transition:opacity 0.5s; pointer-events:none; }
+.emotion-card.dominant .emotion-card-glow { opacity:0.08; }
+.emotion-card-top { display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:10px; }
+.emotion-emoji { font-size:22px; line-height:1; }
+.emotion-pct { font-family:'Syne',sans-serif; font-size:22px; font-weight:700; line-height:1; transition:color 0.4s; }
+.emotion-name { font-size:9px; letter-spacing:2px; text-transform:uppercase; color:var(--muted); }
+.emotion-bar { height:3px; background:var(--border); border-radius:2px; overflow:hidden; margin-top:8px; }
+.emotion-bar-fill { height:100%; border-radius:2px; width:0%; transition:width 0.5s cubic-bezier(0.4,0,0.2,1); }
+
+.right-panel { display:flex; flex-direction:column; height:calc(100vh - 73px); overflow-y:auto; position:sticky; top:73px; }
+.right-panel::-webkit-scrollbar { width:4px; }
+.right-panel::-webkit-scrollbar-thumb { background:var(--border); }
+
+.vibe-hero { padding:32px; border-bottom:1px solid var(--border); position:relative; overflow:hidden; min-height:160px; display:flex; flex-direction:column; justify-content:flex-end; }
+.vibe-bg { position:absolute; inset:0; opacity:0; transition:opacity 0.8s ease; }
+.vibe-tag { font-size:9px; letter-spacing:4px; text-transform:uppercase; color:var(--muted); margin-bottom:8px; position:relative; }
+.vibe-word { font-family:'Syne',sans-serif; font-size:clamp(42px,6vw,64px); font-weight:800; letter-spacing:-2px; line-height:1; position:relative; transition:color 0.5s; }
+.vibe-conf { font-size:11px; color:var(--muted); margin-top:8px; position:relative; }
+
+.palette-section { padding:24px 32px; border-bottom:1px solid var(--border); }
+.section-label { font-size:9px; letter-spacing:3px; text-transform:uppercase; color:var(--muted); margin-bottom:14px; }
+.palette-row { display:flex; gap:8px; height:48px; }
+.palette-chip { flex:1; border-radius:6px; transition:all 0.7s cubic-bezier(0.4,0,0.2,1); cursor:pointer; position:relative; }
+.palette-chip:hover { transform:scaleY(1.3); }
+.palette-chip-label { position:absolute; bottom:-20px; left:50%; transform:translateX(-50%); font-size:8px; color:var(--muted); white-space:nowrap; opacity:0; transition:opacity 0.2s; }
+.palette-chip:hover .palette-chip-label { opacity:1; }
+
+.generate-btn { width:calc(100% - 64px); margin:24px 32px; padding:18px; background:transparent; border:1px solid var(--accent); color:var(--accent); font-family:'DM Mono',monospace; font-size:11px; letter-spacing:4px; text-transform:uppercase; cursor:pointer; border-radius:8px; position:relative; overflow:hidden; transition:color 0.3s, transform 0.15s; }
+.generate-btn::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,var(--accent),#00aaff); transform:translateY(100%); transition:transform 0.35s cubic-bezier(0.4,0,0.2,1); z-index:0; }
+.generate-btn:not(:disabled):hover::before { transform:translateY(0); }
+.generate-btn:not(:disabled):hover { color:#000; }
+.generate-btn:not(:disabled):active { transform:scale(0.98); }
+.generate-btn span { position:relative; z-index:1; }
+.generate-btn:disabled { opacity:0.3; cursor:not-allowed; }
+
+.poem-section { padding:0 32px 24px; }
+.poem-box { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:24px; min-height:180px; position:relative; overflow:hidden; }
+.poem-placeholder { font-size:12px; color:var(--muted); line-height:2; font-style:italic; text-align:center; padding:20px 0; }
+.poem-line { font-size:14px; line-height:2; color:var(--text); opacity:0; transform:translateY(8px); animation:poemLine 0.5s forwards; }
+@keyframes poemLine { to{opacity:1;transform:translateY(0)} }
+
+.thinking-text { display:flex; align-items:center; gap:12px; font-size:11px; color:var(--accent3); letter-spacing:2px; padding:20px 0; }
+.thinking-dots span { display:inline-block; width:4px; height:4px; border-radius:50%; background:var(--accent3); animation:dot 1.2s infinite; margin:0 2px; }
+.thinking-dots span:nth-child(2){animation-delay:0.2s}
+.thinking-dots span:nth-child(3){animation-delay:0.4s}
+@keyframes dot { 0%,100%{opacity:0.2;transform:scale(0.8)} 50%{opacity:1;transform:scale(1.2)} }
+
+.music-section { padding:24px 32px; border-bottom:1px solid var(--border); }
+.music-box { background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:20px; display:flex; align-items:center; gap:16px; }
+.music-icon { font-size:28px; line-height:1; }
+.music-info { flex:1; }
+.music-mood { font-size:11px; color:var(--muted); letter-spacing:2px; text-transform:uppercase; margin-bottom:4px; }
+.music-rec { font-size:13px; color:var(--text); }
+
+.history-section { padding:0 32px 32px; }
+.history-row { display:flex; gap:6px; flex-wrap:wrap; margin-top:12px; }
+.history-chip { padding:4px 12px; border-radius:20px; border:1px solid var(--border); font-size:10px; letter-spacing:1px; animation:chipIn 0.3s both; }
+@keyframes chipIn { from{opacity:0;transform:scale(0.8)} to{opacity:1;transform:scale(1)} }
+
+#emotionOverlay { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(0.5); z-index:200; pointer-events:none; opacity:0; transition:all 0.4s cubic-bezier(0.34,1.56,0.64,1); font-size:120px; text-align:center; }
+#emotionOverlay.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
 
+.poem-credit { font-size:9px; color:var(--muted); letter-spacing:2px; margin-top:16px; text-align:right; }
 </style>
 </head>
 <body>
 
-<!-- Particle background -->
 <canvas id="particles"></canvas>
+<div id="emotionOverlay"></div>
 
-<!-- Splash -->
 <div id="splash">
   <div class="splash-title">VIBE<br>CHECK</div>
   <div class="splash-sub">AI · Emotion · Mirror</div>
@@ -723,10 +159,6 @@ canvas#faceOverlay {
   <button class="splash-btn" id="splashBtn" style="display:none"><span>✦ Start Experience</span></button>
 </div>
 
-<!-- Emotion flash overlay -->
-<div id="emotionOverlay"></div>
-
-<!-- App -->
 <div id="app">
   <header class="header">
     <div class="logo">VIBE CHECK</div>
@@ -737,35 +169,28 @@ canvas#faceOverlay {
   </header>
 
   <div class="main">
-    <!-- LEFT -->
     <div class="camera-zone">
       <div class="camera-wrapper" id="cameraWrapper">
         <video id="video" autoplay muted playsinline></video>
         <canvas id="faceOverlay"></canvas>
         <div class="camera-label" id="cameraLabel">INITIALIZING</div>
       </div>
-
-      <!-- Emotion grid -->
       <div class="emotion-grid" id="emotionGrid"></div>
     </div>
 
-    <!-- RIGHT -->
     <div class="right-panel">
-      <!-- Vibe hero -->
-      <div class="vibe-hero" id="vibeHero">
+      <div class="vibe-hero">
         <div class="vibe-bg" id="vibeBg"></div>
         <div class="vibe-tag">Current Vibe</div>
         <div class="vibe-word" id="vibeWord">—</div>
         <div class="vibe-conf" id="vibeConf">Waiting for face detection...</div>
       </div>
 
-      <!-- Palette -->
       <div class="palette-section">
         <div class="section-label">Emotional Palette</div>
         <div class="palette-row" id="paletteRow"></div>
       </div>
 
-      <!-- Music suggestion -->
       <div class="music-section">
         <div class="section-label">Mood Soundtrack</div>
         <div class="music-box">
@@ -777,21 +202,17 @@ canvas#faceOverlay {
         </div>
       </div>
 
-      <!-- No API key needed -->
-
       <button class="generate-btn" id="generateBtn" disabled>
         <span id="generateBtnText">✦ Generate Vibe Poem</span>
       </button>
 
-      <!-- Poem -->
       <div class="poem-section">
-        <div class="section-label">AI Poem for Your Vibe</div>
+        <div class="section-label">Poem for Your Vibe</div>
         <div class="poem-box" id="poemBox">
-          <div class="poem-placeholder">Your emotions will be transformed<br>into verse — hit Generate.</div>
+          <div class="poem-placeholder">Point your face at the camera<br>and hit Generate.</div>
         </div>
       </div>
 
-      <!-- History -->
       <div class="history-section">
         <div class="section-label">Vibe History</div>
         <div class="history-row" id="historyRow">
@@ -803,423 +224,397 @@ canvas#faceOverlay {
 </div>
 
 <script>
-// ──────────────────────────────────────────────
-// CONFIG
-// ──────────────────────────────────────────────
-const EMOTIONS = {
-  happy:     { emoji:'😄', label:'HAPPY',     color:'#ffbe0b', palette:['#ffbe0b','#ff9500','#fff3b0','#ffd166','#f4a261'], music:'Upbeat Pop / Funk', bg:'rgba(255,190,11,0.06)' },
-  sad:       { emoji:'😢', label:'SAD',       color:'#4895ef', palette:['#4895ef','#3a0ca3','#7209b7','#4361ee','#023e8a'], music:'Ambient / Lo-fi Chill', bg:'rgba(72,149,239,0.06)' },
-  angry:     { emoji:'😠', label:'ANGRY',     color:'#e63946', palette:['#e63946','#9d0208','#dc2f02','#f48c06','#370617'], music:'Heavy Rock / Rage', bg:'rgba(230,57,70,0.06)' },
-  fearful:   { emoji:'😨', label:'FEARFUL',   color:'#b5179e', palette:['#7209b7','#560bad','#3a0ca3','#480ca8','#b5179e'], music:'Dark Ambient / Thriller', bg:'rgba(181,23,158,0.06)' },
-  disgusted: { emoji:'🤢', label:'DISGUSTED', color:'#2dc653', palette:['#2dc653','#006400','#38b000','#70e000','#ccff33'], music:'Industrial / Noise', bg:'rgba(45,198,83,0.06)' },
-  surprised: { emoji:'😲', label:'SURPRISED', color:'#00ffcc', palette:['#00ffcc','#00b4d8','#90e0ef','#caf0f8','#0077b6'], music:'Electronic / Euphoric', bg:'rgba(0,255,204,0.06)' },
-  neutral:   { emoji:'😐', label:'NEUTRAL',   color:'#aaaacc', palette:['#aaaacc','#7b7c8d','#555570','#333344','#1a1a2e'], music:'Classical / Instrumental', bg:'rgba(170,170,204,0.04)' },
+// ═══════════════════════════════════════════════
+// POEM ENGINE — infinite variety, zero backend
+// Each emotion has:
+//   lines[]: pools of lines to randomly pick from
+//   fallback[]: full curated poems as backup
+// ═══════════════════════════════════════════════
+const POEM_ENGINE = {
+  happy: {
+    lines: [
+      // sight
+      ["gold spills through the curtain like a slow exhale","the room tilts slightly toward the sun","everything catches light at once","colours arrive before their names do","the edges of things soften and glow"],
+      // sound
+      ["a hum lives just beneath the floorboards","distant music leaks through a half-open window","laughter lands like a stone in still water","the world hums at a frequency just above silence","bells ring somewhere too far to locate"],
+      // texture
+      ["warm cloth against the back of a hand","smooth stone warmed by an afternoon","the grain of wood under a slow palm","something soft presses back when touched","a surface that gives slightly, then holds"],
+      // temperature
+      ["heat that doesn't burn, only settles","warmth arrives without a source","the sun has moved inside somehow","a gentle pressure, like being held by air","summer lives just under the skin"],
+      // movement
+      ["the body moves before the mind agrees","steps that barely touch the ground","a drift rather than a walk","buoyancy without water","the chest opens like a door in spring"],
+    ],
+    fallback: [
+      ["Gold spills through the curtain like a slow exhale,","a hum lives just beneath the floorboards.","Warm cloth presses against the back of a hand —","heat that doesn't burn, only settles.","The body moves before the mind agrees,","steps that barely graze the ground.","Everything, just now, catches light."]
+    ]
+  },
+  sad: {
+    lines: [
+      ["the window holds the grey in place","blue settles at the bottom of things","the light arrives but doesn't stay","everything is the colour of almost","shadows stack quietly in the corners"],
+      ["rain against glass, no rhythm to it","a sound like something being folded away","silence with a low frequency underneath","the echo of a name no one said","the creak of a house settling into itself"],
+      ["cotton that has been washed too many times","the weight of a blanket that doesn't warm","something smooth worn down at the edges","the inside of a pocket, empty and soft","paper that has been held too long"],
+      ["cold that comes from inside, not the air","the temperature of still water at depth","a coolness where warmth used to sit","the air in a room no one has entered","the chill of glass before dawn"],
+      ["stillness that accumulates like dust","slow moving, as though through something thicker than air","a turning away from nothing in particular","the gradual lowering of a room's light","to sit is to sink, gently, without end"],
+    ],
+    fallback: [
+      ["The window holds the grey in place,","rain against glass with no rhythm to it.","Cotton that has been washed too many times —","cold that comes from inside, not the air.","Stillness accumulates like dust on a sill.","A turning away from nothing in particular.","Silence with a low frequency underneath."]
+    ]
+  },
+  angry: {
+    lines: [
+      ["red arrives before the thought does","everything sharpens at once, edges first","the room contracts around a single point","colour drains to the primary","sparks at the periphery of vision"],
+      ["a sound like something tearing cleanly","the frequency that precedes feedback","words that arrive already broken","a clatter that was always going to happen","the silence after something falls"],
+      ["heat under the palms of both hands","pressure behind the eyes, building","the grip tightening on nothing","a jaw that has forgotten how to open","stone in the throat, dense and hot"],
+      ["burning that has no source and no ceiling","the temperature of metal left in sun","heat that radiates outward without cooling","a fever without a body","warmth that has crossed into something else"],
+      ["motion with nowhere left to go","the tension of a coiled thing","pacing that solves nothing and continues","the body a fist it hasn't made yet","forward momentum meeting a wall"],
+    ],
+    fallback: [
+      ["Red arrives before the thought does —","a sound like something tearing cleanly.","Heat under the palms of both hands,","burning that has no source and no ceiling.","The body: a fist it hasn't made yet.","Words that arrive already broken.","Everything sharpens at once, edges first."]
+    ]
+  },
+  fearful: {
+    lines: [
+      ["the dark arranges itself into shapes","edges dissolve before they can be named","things flicker at the limit of vision","the room is larger than it was a moment ago","what was familiar has shifted slightly"],
+      ["a sound that stops before it can be identified","the creak that answers no question","the held breath between two silences","a frequency beneath hearing that arrives anyway","footsteps that may have been nothing"],
+      ["cold at the back of the neck without cause","fingertips that have gone distant","the skin that knows before the mind does","a prickling along the forearms, slow and certain","the chest draws inward without permission"],
+      ["cold that moves","the air before something arrives","ice that sits behind the sternum","the temperature of a room that has been waiting","deep water, its weight from above"],
+      ["frozen in the middle of an action","the inability to complete a step","eyes moving faster than the body follows","the animal stillness before flight or fight","to stand very still and hope the moment passes"],
+    ],
+    fallback: [
+      ["The dark arranges itself into shapes","at the limit of what the eye will confirm.","A sound stops before it can be identified —","cold at the back of the neck without cause.","The chest draws inward without permission.","Ice that sits behind the sternum, waiting.","Frozen in the middle of an unfinished step."]
+    ]
+  },
+  disgusted: {
+    lines: [
+      ["the colour of something left too long","a green that has crossed into wrong","the surface that won't quite resolve","murk at the bottom of a clear thing","a tint that shouldn't be there"],
+      ["the sound a wet thing makes","a word that lands wrong in the mouth","the noise beneath a noise","something that squelches at low volume","a frequency that curdles"],
+      ["slick without moisture","a surface the hand pulls back from","the texture of something past its time","resistance that gives in the wrong way","the thing the tongue rejects"],
+      ["the temperature of something that should be cold","a warmth where there should be cool","the heat of rot","a tepid that is somehow worse than cold","the wrong temperature entirely"],
+      ["the flinch before it is understood","a recoiling that happens on its own","the slow backward movement","turning the face without deciding to","the body that already knows and moves"],
+    ],
+    fallback: [
+      ["The colour of something left too long —","a sound a wet thing makes at low volume.","Slick without moisture, the surface resists.","The temperature of something past its time.","A flinch before anything is understood,","the body recoiling before the mind agrees.","A green that has quietly crossed into wrong."]
+    ]
+  },
+  surprised: {
+    lines: [
+      ["white before any other colour","a flash that rearranges the room","light that arrives before the source","the brightness that precedes understanding","everything overexposed for a moment"],
+      ["the sharp intake before the word","a gasp that rearranges the silence","sound stops and starts again differently","the pitch that rises without warning","a note struck in an empty space"],
+      ["electricity at the fingertips","the static that precedes contact","a tingling that moves upward","the buzz of something suddenly live","skin that has woken up all at once"],
+      ["a rush of warmth to the face","heat that blooms in the chest unexpectedly","sudden warmth with no source","the temperature of the unexpected","a flush that arrives before the thought"],
+      ["the body catches itself mid-motion","a stumble that doesn't fall","the flinch that becomes a laugh","momentum interrupted and resumed","the slight stagger of the newly arrived"],
+    ],
+    fallback: [
+      ["White before any other colour —","the sharp intake before the word forms.","Electricity moves upward from the fingertips.","A rush of warmth arrives before the thought.","The body catches itself mid-motion,","a stumble that doesn't quite fall.","Everything overexposed, then slowly resolved."]
+    ]
+  },
+  neutral: {
+    lines: [
+      ["grey that is neither cold nor warm","the colour of a sky deciding","muted tones that ask nothing","a palette that withholds its conclusion","the in-between of every shade"],
+      ["the sound of a room being itself","ambient noise that amounts to nothing","the hum of systems running quietly","background that stays background","a tone held without emphasis"],
+      ["the texture of paper before writing","smooth that is simply smooth","a surface with no particular quality","the feel of air at the right temperature","neutral fabric, neither soft nor rough"],
+      ["the temperature that goes unnoticed","neither warm nor cool, simply present","the air of an ordinary afternoon","the temperature of a decision not yet made","equilibrium, exact and unremarkable"],
+      ["the pause between one thing and another","stillness that is not waiting","a standing that requires no effort","the body at rest without wanting rest","to simply be in the room, occupying it"],
+    ],
+    fallback: [
+      ["Grey that is neither cold nor warm —","the sound of a room simply being itself.","The texture of paper before any writing.","The temperature that goes completely unnoticed.","A pause between one thing and another,","stillness that is not waiting for anything.","To be in the room, and to occupy it."]
+    ]
+  }
 };
 
-let modelsLoaded = false;
+// ═══════════════════════════════════════════════
+// GENERATE POEM from engine
+// Picks one random line from each of the 5 sense-pools
+// Falls back to a full curated poem occasionally for variety
+// ═══════════════════════════════════════════════
+function generatePoem(emotion, confidence) {
+  const engine = POEM_ENGINE[emotion] || POEM_ENGINE.neutral;
+
+  // 20% chance of using a full fallback poem for variety
+  if (Math.random() < 0.2) {
+    const fallbacks = engine.fallback;
+    return fallbacks[Math.floor(Math.random() * fallbacks.length)];
+  }
+
+  // Otherwise build a unique poem by picking one line from each sense pool
+  return engine.lines.map(pool => pool[Math.floor(Math.random() * pool.length)]);
+}
+
+// ═══════════════════════════════════════════════
+// EMOTION CONFIG
+// ═══════════════════════════════════════════════
+const EMOTIONS = {
+  happy:     { emoji:'😄', label:'HAPPY',     color:'#ffbe0b', palette:['#ffbe0b','#ff9500','#fff3b0','#ffd166','#f4a261'], music:'Upbeat Pop / Funk' },
+  sad:       { emoji:'😢', label:'SAD',       color:'#4895ef', palette:['#4895ef','#3a0ca3','#7209b7','#4361ee','#023e8a'], music:'Ambient / Lo-fi Chill' },
+  angry:     { emoji:'😠', label:'ANGRY',     color:'#e63946', palette:['#e63946','#9d0208','#dc2f02','#f48c06','#370617'], music:'Heavy Rock / Rage' },
+  fearful:   { emoji:'😨', label:'FEARFUL',   color:'#b5179e', palette:['#7209b7','#560bad','#3a0ca3','#480ca8','#b5179e'], music:'Dark Ambient / Thriller' },
+  disgusted: { emoji:'🤢', label:'DISGUSTED', color:'#2dc653', palette:['#2dc653','#006400','#38b000','#70e000','#ccff33'], music:'Industrial / Noise' },
+  surprised: { emoji:'😲', label:'SURPRISED', color:'#00ffcc', palette:['#00ffcc','#00b4d8','#90e0ef','#caf0f8','#0077b6'], music:'Electronic / Euphoric' },
+  neutral:   { emoji:'😐', label:'NEUTRAL',   color:'#aaaacc', palette:['#aaaacc','#7b7c8d','#555570','#333344','#1a1a2e'], music:'Classical / Instrumental' },
+};
+
 let currentEmotions = null;
 let lastDominant = null;
 let vibeHistory = [];
-let detectionRunning = false;
 
-// ──────────────────────────────────────────────
-// PARTICLES
-// ──────────────────────────────────────────────
+// ── PARTICLES ──
 const pCanvas = document.getElementById('particles');
 const pCtx = pCanvas.getContext('2d');
 let particles = [];
-
-function resizeParticles() {
-  pCanvas.width = window.innerWidth;
-  pCanvas.height = window.innerHeight;
-}
-
 function initParticles() {
-  resizeParticles();
-  particles = Array.from({length:80}, () => ({
-    x: Math.random() * pCanvas.width,
-    y: Math.random() * pCanvas.height,
-    r: Math.random() * 1.5 + 0.3,
-    vx: (Math.random()-0.5) * 0.3,
-    vy: (Math.random()-0.5) * 0.3,
-    a: Math.random() * 0.4 + 0.1,
-    color: ['#00ffcc','#4895ef','#b5179e','#ffbe0b'][Math.floor(Math.random()*4)]
+  pCanvas.width=window.innerWidth; pCanvas.height=window.innerHeight;
+  particles=Array.from({length:80},()=>({
+    x:Math.random()*pCanvas.width,y:Math.random()*pCanvas.height,
+    r:Math.random()*1.5+0.3,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.3,
+    a:Math.random()*0.4+0.1,color:['#00ffcc','#4895ef','#b5179e','#ffbe0b'][Math.floor(Math.random()*4)]
   }));
 }
-
 function drawParticles() {
   pCtx.clearRect(0,0,pCanvas.width,pCanvas.height);
-  particles.forEach(p => {
-    p.x += p.vx; p.y += p.vy;
-    if(p.x<0) p.x=pCanvas.width; if(p.x>pCanvas.width) p.x=0;
-    if(p.y<0) p.y=pCanvas.height; if(p.y>pCanvas.height) p.y=0;
-    pCtx.beginPath();
-    pCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
-    pCtx.fillStyle = p.color + Math.floor(p.a*255).toString(16).padStart(2,'0');
+  particles.forEach(p=>{
+    p.x+=p.vx;p.y+=p.vy;
+    if(p.x<0)p.x=pCanvas.width;if(p.x>pCanvas.width)p.x=0;
+    if(p.y<0)p.y=pCanvas.height;if(p.y>pCanvas.height)p.y=0;
+    pCtx.beginPath();pCtx.arc(p.x,p.y,p.r,0,Math.PI*2);
+    pCtx.fillStyle=p.color+Math.floor(p.a*255).toString(16).padStart(2,'0');
     pCtx.fill();
   });
   requestAnimationFrame(drawParticles);
 }
+initParticles();drawParticles();
+window.addEventListener('resize',initParticles);
 
-initParticles();
-drawParticles();
-window.addEventListener('resize', resizeParticles);
-
-// ──────────────────────────────────────────────
-// BUILD EMOTION GRID
-// ──────────────────────────────────────────────
+// ── EMOTION GRID ──
 function buildEmotionGrid() {
-  const grid = document.getElementById('emotionGrid');
-  grid.innerHTML = '';
-  Object.entries(EMOTIONS).forEach(([key, meta]) => {
-    const card = document.createElement('div');
-    card.className = 'emotion-card';
-    card.id = `card-${key}`;
-    card.innerHTML = `
-      <div class="emotion-card-glow" id="glow-${key}" style="background:${meta.color}"></div>
+  const grid=document.getElementById('emotionGrid');
+  grid.innerHTML='';
+  Object.entries(EMOTIONS).forEach(([key,meta])=>{
+    const card=document.createElement('div');
+    card.className='emotion-card';card.id=`card-${key}`;
+    card.innerHTML=`
+      <div class="emotion-card-glow" style="background:${meta.color}"></div>
       <div class="emotion-card-top">
         <span class="emotion-emoji">${meta.emoji}</span>
         <span class="emotion-pct" id="pct-${key}" style="color:${meta.color}">0%</span>
       </div>
       <div class="emotion-name">${meta.label}</div>
-      <div class="emotion-bar">
-        <div class="emotion-bar-fill" id="bar-${key}" style="background:${meta.color}; width:0%"></div>
-      </div>
+      <div class="emotion-bar"><div class="emotion-bar-fill" id="bar-${key}" style="background:${meta.color}"></div></div>
     `;
     grid.appendChild(card);
   });
 }
-
 buildEmotionGrid();
 
-// Build initial palette
 function buildPalette(colors) {
-  const row = document.getElementById('paletteRow');
-  row.innerHTML = '';
-  colors.forEach(c => {
-    const chip = document.createElement('div');
-    chip.className = 'palette-chip';
-    chip.style.background = c;
-    chip.title = c;
-    chip.innerHTML = `<span class="palette-chip-label">${c}</span>`;
-    chip.addEventListener('click', () => {
-      navigator.clipboard?.writeText(c);
-      chip.style.transform = 'scaleY(1.5)';
-      setTimeout(() => chip.style.transform = '', 300);
-    });
+  const row=document.getElementById('paletteRow');
+  row.innerHTML='';
+  colors.forEach(c=>{
+    const chip=document.createElement('div');
+    chip.className='palette-chip';chip.style.background=c;
+    chip.innerHTML=`<span class="palette-chip-label">${c}</span>`;
+    chip.addEventListener('click',()=>{navigator.clipboard?.writeText(c);chip.style.transform='scaleY(1.5)';setTimeout(()=>chip.style.transform='',300);});
     row.appendChild(chip);
   });
 }
 buildPalette(['#111118','#151520','#1a1a2e','#0d0d14','#050508']);
 
-// ──────────────────────────────────────────────
-// LOAD MODELS
-// ──────────────────────────────────────────────
+// ── LOAD MODELS ──
 async function loadModels() {
-  const fill = document.getElementById('loadingFill');
-  const label = document.getElementById('loadingLabel');
-
-  const MODEL_URL = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.2/model/';
-
+  const fill=document.getElementById('loadingFill');
+  const label=document.getElementById('loadingLabel');
+  const MODEL_URL='https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.2/model/';
   try {
-    label.textContent = 'Loading detector...';
-    fill.style.width = '20%';
+    label.textContent='Loading detector...';fill.style.width='20%';
     await faceapi.nets.tinyFaceDetector.loadFromUri(MODEL_URL);
-
-    fill.style.width = '70%';
-    label.textContent = 'Loading expression model...';
+    fill.style.width='70%';label.textContent='Loading expression model...';
     await faceapi.nets.faceExpressionNet.loadFromUri(MODEL_URL);
-
-    fill.style.width = '100%';
-    label.textContent = 'Ready!';
-    modelsLoaded = true;
-
-    setTimeout(() => {
-      document.getElementById('splashBtn').style.display = 'block';
-      label.style.color = 'var(--accent)';
-    }, 400);
-
+    fill.style.width='100%';label.textContent='Ready! ✓';
+    label.style.color='var(--accent)';
+    setTimeout(()=>{document.getElementById('splashBtn').style.display='block';},400);
   } catch(e) {
-    label.textContent = '⚠ Failed to load models. Refresh page.';
-    label.style.color = 'var(--accent2)';
+    label.textContent='⚠ Model load failed — refresh page.';
+    label.style.color='var(--accent2)';
   }
 }
 
-document.getElementById('splashBtn').addEventListener('click', async () => {
+document.getElementById('splashBtn').addEventListener('click',async()=>{
   document.getElementById('splash').classList.add('hidden');
   document.getElementById('app').classList.add('visible');
   await startCamera();
 });
 
-// ──────────────────────────────────────────────
-// CAMERA
-// ──────────────────────────────────────────────
+// ── CAMERA ──
 async function startCamera() {
   try {
-    const stream = await navigator.mediaDevices.getUserMedia({ video: { width:640, height:480, facingMode:'user' } });
-    const video = document.getElementById('video');
-    video.srcObject = stream;
-    video.onloadedmetadata = () => {
-      const ov = document.getElementById('faceOverlay');
-      ov.width = video.videoWidth;
-      ov.height = video.videoHeight;
+    const stream=await navigator.mediaDevices.getUserMedia({video:{width:640,height:480,facingMode:'user'}});
+    const video=document.getElementById('video');
+    video.srcObject=stream;
+    video.onloadedmetadata=()=>{
+      const ov=document.getElementById('faceOverlay');
+      ov.width=video.videoWidth;ov.height=video.videoHeight;
       startDetection();
     };
   } catch(e) {
-    setStatus('error', 'Camera denied');
-    document.getElementById('cameraLabel').textContent = '⚠ CAMERA DENIED';
+    setStatus('error','Camera denied');
+    document.getElementById('cameraLabel').textContent='⚠ CAMERA DENIED';
     document.getElementById('cameraLabel').classList.add('no-face');
   }
 }
 
-// ──────────────────────────────────────────────
-// DETECTION LOOP
-// ──────────────────────────────────────────────
+// ── DETECTION ──
 async function startDetection() {
-  const video = document.getElementById('video');
-  const ov = document.getElementById('faceOverlay');
-  const ctx2 = ov.getContext('2d');
-  detectionRunning = true;
+  const video=document.getElementById('video');
+  const ov=document.getElementById('faceOverlay');
+  const ctx2=ov.getContext('2d');
+  setStatus('live','Live');
 
-  setStatus('live', 'Live');
-
-  const detect = async () => {
-    if (!detectionRunning) return;
-
-    const result = await faceapi
-      .detectSingleFace(video, new faceapi.TinyFaceDetectorOptions({ scoreThreshold: 0.4 }))
+  const detect=async()=>{
+    const result=await faceapi
+      .detectSingleFace(video,new faceapi.TinyFaceDetectorOptions({scoreThreshold:0.4}))
       .withFaceExpressions();
-
     ctx2.clearRect(0,0,ov.width,ov.height);
 
-    if (result) {
-      currentEmotions = result.expressions;
-      const dominant = getDominant(result.expressions);
-      const meta = EMOTIONS[dominant.key];
+    if(result){
+      currentEmotions=result.expressions;
+      const dominant=getDominant(result.expressions);
+      const meta=EMOTIONS[dominant.key];
 
       document.getElementById('cameraWrapper').classList.add('detected');
-      document.getElementById('cameraLabel').textContent = '● FACE DETECTED';
+      document.getElementById('cameraLabel').textContent='● FACE DETECTED';
       document.getElementById('cameraLabel').classList.remove('no-face');
-      document.getElementById('generateBtn').disabled = false;
+      document.getElementById('generateBtn').disabled=false;
+      drawFaceBox(ctx2,result.detection.box,meta.color);
 
-      // Draw face box
-      drawFaceBox(ctx2, result.detection.box, meta.color, dominant.key);
-
-      // Update emotion cards
-      Object.entries(result.expressions).forEach(([key, val]) => {
-        const pct = document.getElementById(`pct-${key}`);
-        const bar = document.getElementById(`bar-${key}`);
-        const card = document.getElementById(`card-${key}`);
-        if (pct) pct.textContent = (val*100).toFixed(0) + '%';
-        if (bar) bar.style.width = (val*100).toFixed(1) + '%';
-        if (card) card.classList.toggle('dominant', key === dominant.key);
+      Object.entries(result.expressions).forEach(([key,val])=>{
+        const pct=document.getElementById(`pct-${key}`);
+        const bar=document.getElementById(`bar-${key}`);
+        const card=document.getElementById(`card-${key}`);
+        if(pct)pct.textContent=(val*100).toFixed(0)+'%';
+        if(bar)bar.style.width=(val*100).toFixed(1)+'%';
+        if(card)card.classList.toggle('dominant',key===dominant.key);
       });
 
-      // Update vibe hero
-      document.getElementById('vibeWord').textContent = meta.label;
-      document.getElementById('vibeWord').style.color = meta.color;
-      document.getElementById('vibeConf').textContent = `${(dominant.val*100).toFixed(1)}% confidence`;
-      document.getElementById('vibeBg').style.background = `radial-gradient(ellipse at center, ${meta.color}22 0%, transparent 70%)`;
-      document.getElementById('vibeBg').style.opacity = '1';
-
-      // Update palette live
+      document.getElementById('vibeWord').textContent=meta.label;
+      document.getElementById('vibeWord').style.color=meta.color;
+      document.getElementById('vibeConf').textContent=`${(dominant.val*100).toFixed(1)}% confidence`;
+      document.getElementById('vibeBg').style.background=`radial-gradient(ellipse at center,${meta.color}22 0%,transparent 70%)`;
+      document.getElementById('vibeBg').style.opacity='1';
       buildPalette(meta.palette);
+      document.getElementById('musicMood').textContent=meta.label;
+      document.getElementById('musicRec').textContent=meta.music;
+      document.getElementById('musicIcon').textContent=meta.emoji;
 
-      // Update music
-      document.getElementById('musicMood').textContent = meta.label;
-      document.getElementById('musicRec').textContent = meta.music;
-      document.getElementById('musicIcon').textContent = meta.emoji;
-
-      // Flash on dominant change
-      if (lastDominant !== dominant.key) {
-        flashEmotion(meta.emoji, meta.color);
-        lastDominant = dominant.key;
-      }
-
+      if(lastDominant!==dominant.key){flashEmotion(meta.emoji,meta.color);lastDominant=dominant.key;}
     } else {
-      currentEmotions = null;
+      currentEmotions=null;
       document.getElementById('cameraWrapper').classList.remove('detected');
-      document.getElementById('cameraLabel').textContent = '○ NO FACE DETECTED';
+      document.getElementById('cameraLabel').textContent='○ NO FACE DETECTED';
       document.getElementById('cameraLabel').classList.add('no-face');
-      document.getElementById('generateBtn').disabled = true;
-
-      // Reset bars
-      Object.keys(EMOTIONS).forEach(key => {
-        const pct = document.getElementById(`pct-${key}`);
-        const bar = document.getElementById(`bar-${key}`);
-        const card = document.getElementById(`card-${key}`);
-        if (pct) pct.textContent = '0%';
-        if (bar) bar.style.width = '0%';
-        if (card) card.classList.remove('dominant');
+      document.getElementById('generateBtn').disabled=true;
+      Object.keys(EMOTIONS).forEach(key=>{
+        const pct=document.getElementById(`pct-${key}`);
+        const bar=document.getElementById(`bar-${key}`);
+        const card=document.getElementById(`card-${key}`);
+        if(pct)pct.textContent='0%';if(bar)bar.style.width='0%';if(card)card.classList.remove('dominant');
       });
     }
-
-    setTimeout(detect, 150);
+    setTimeout(detect,150);
   };
-
   detect();
 }
 
-function drawFaceBox(ctx2, box, color, emotion) {
-  const {x,y,width,height} = box;
-  const cs = 18;
-
-  ctx2.strokeStyle = color;
-  ctx2.lineWidth = 1.5;
-  ctx2.shadowColor = color;
-  ctx2.shadowBlur = 12;
-
-  // Dashed box
-  ctx2.setLineDash([6,4]);
-  ctx2.strokeRect(x,y,width,height);
-  ctx2.setLineDash([]);
-
-  // Corner marks
-  ctx2.lineWidth = 3;
-  ctx2.shadowBlur = 20;
-  [[x,y,1,1],[x+width,y,-1,1],[x,y+height,1,-1],[x+width,y+height,-1,-1]].forEach(([px,py,sx,sy]) => {
-    ctx2.beginPath();
-    ctx2.moveTo(px+sx*cs,py);
-    ctx2.lineTo(px,py);
-    ctx2.lineTo(px,py+sy*cs);
-    ctx2.stroke();
+function drawFaceBox(ctx2,box,color){
+  const{x,y,width,height}=box;const cs=18;
+  ctx2.strokeStyle=color;ctx2.lineWidth=1.5;ctx2.shadowColor=color;ctx2.shadowBlur=12;
+  ctx2.setLineDash([6,4]);ctx2.strokeRect(x,y,width,height);ctx2.setLineDash([]);
+  ctx2.lineWidth=3;ctx2.shadowBlur=20;
+  [[x,y,1,1],[x+width,y,-1,1],[x,y+height,1,-1],[x+width,y+height,-1,-1]].forEach(([px,py,sx,sy])=>{
+    ctx2.beginPath();ctx2.moveTo(px+sx*cs,py);ctx2.lineTo(px,py);ctx2.lineTo(px,py+sy*cs);ctx2.stroke();
   });
-
-  ctx2.shadowBlur = 0;
+  ctx2.shadowBlur=0;
 }
 
-function getDominant(expressions) {
-  let max = 0, key = 'neutral';
-  Object.entries(expressions).forEach(([k,v]) => { if(v>max){max=v;key=k;} });
-  return { key, val: max };
+function getDominant(expressions){
+  let max=0,key='neutral';
+  Object.entries(expressions).forEach(([k,v])=>{if(v>max){max=v;key=k;}});
+  return{key,val:max};
 }
 
-// ──────────────────────────────────────────────
-// EMOTION FLASH
-// ──────────────────────────────────────────────
-function flashEmotion(emoji, color) {
-  const el = document.getElementById('emotionOverlay');
-  el.textContent = emoji;
-  el.style.textShadow = `0 0 60px ${color}`;
-  el.classList.add('show');
-  setTimeout(() => el.classList.remove('show'), 600);
+function flashEmotion(emoji,color){
+  const el=document.getElementById('emotionOverlay');
+  el.textContent=emoji;el.style.textShadow=`0 0 60px ${color}`;
+  el.classList.add('show');setTimeout(()=>el.classList.remove('show'),600);
 }
 
-// ──────────────────────────────────────────────
-// STATUS
-// ──────────────────────────────────────────────
-function setStatus(state, text) {
-  const dot = document.getElementById('pulseDot');
-  const label = document.getElementById('statusText');
-  dot.className = `pulse-dot ${state}`;
-  label.textContent = text;
+function setStatus(state,text){
+  document.getElementById('pulseDot').className=`pulse-dot ${state}`;
+  document.getElementById('statusText').textContent=text;
 }
 
-// ──────────────────────────────────────────────
-// GENERATE POEM
-// ──────────────────────────────────────────────
-document.getElementById('generateBtn').addEventListener('click', async () => {
-  if (!currentEmotions) return;
+// ── GENERATE POEM (fully local, no API needed) ──
+document.getElementById('generateBtn').addEventListener('click',()=>{
+  if(!currentEmotions)return;
 
-  const GEMINI_API_KEY = 'AIzaSyAsBaTOsfGf_JimcbchBvHZIqiWKjvJ3tQ';
+  const dominant=getDominant(currentEmotions);
+  const meta=EMOTIONS[dominant.key];
 
-  const dominant = getDominant(currentEmotions);
-  const meta = EMOTIONS[dominant.key];
+  addToHistory(dominant.key,meta);
 
-  const emotionData = Object.entries(currentEmotions)
-    .sort((a,b) => b[1]-a[1])
-    .map(([e,v]) => `${e}: ${(v*100).toFixed(1)}%`)
-    .join(', ');
+  const poemBox=document.getElementById('poemBox');
 
-  // Add to history
-  addToHistory(dominant.key, meta);
-
-  // Update UI
-  const poemBox = document.getElementById('poemBox');
-  poemBox.innerHTML = `
-    <div class="poem-scanning"></div>
+  // Show a brief "thinking" animation for effect
+  poemBox.innerHTML=`
     <div class="thinking-text">
       <div class="thinking-dots"><span></span><span></span><span></span></div>
       READING YOUR VIBE
     </div>
   `;
 
-  setStatus('thinking', 'Generating');
-  document.getElementById('generateBtn').disabled = true;
-  document.getElementById('generateBtnText').textContent = '⟳ Generating...';
+  setStatus('thinking','Generating');
+  document.getElementById('generateBtn').disabled=true;
+  document.getElementById('generateBtnText').textContent='⟳ Generating...';
 
-  try {
-    const prompt = `You are a synesthetic poet. Based on this real-time emotional analysis of someone's face, write a short evocative poem (5–7 lines). Make it vivid and slightly abstract — never name the emotions directly. Each line should feel like a different sense (sight, sound, texture, temperature, movement).
+  // Small delay for the animation to feel satisfying
+  setTimeout(()=>{
+    const lines=generatePoem(dominant.key, dominant.val);
 
-Emotional data: ${emotionData}
-Dominant: ${dominant.key} at ${(dominant.val*100).toFixed(1)}%
-
-Only return the poem. No title, no explanation.`;
-
-    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }]
-      })
-    });
-
-    const data = await response.json();
-
-    if (!response.ok || data.error) {
-      const errMsg = data.error?.message || JSON.stringify(data).substring(0, 200);
-      poemBox.innerHTML = `<p style="color:var(--accent2);font-size:11px">API Error: ${errMsg}</p>`;
-      setStatus("error", "Error");
-      document.getElementById("generateBtn").disabled = false;
-      document.getElementById("generateBtnText").textContent = "u2726 Generate Vibe Poem";
-      return;
-    }
-
-    const poem = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "Could not generate poem.";
-
-    poemBox.innerHTML = "";
-    poem.split("\n").filter(l=>l.trim()).forEach((line, i) => {
-      const p = document.createElement("p");
-      p.className = "poem-line";
-      p.textContent = line;
-      p.style.animationDelay = `${i*0.18}s`;
+    poemBox.innerHTML='';
+    lines.forEach((line,i)=>{
+      const p=document.createElement('p');
+      p.className='poem-line';
+      p.textContent=line;
+      p.style.animationDelay=`${i*0.18}s`;
       poemBox.appendChild(p);
     });
 
-    setStatus("live", "Live");
-  } catch(e) {
-    poemBox.innerHTML = `<p style="color:var(--accent2);font-size:11px">Error: ${e.message}</p>`;
-    setStatus("error", "Error");
-  }
+    // Small credit line
+    const credit=document.createElement('p');
+    credit.className='poem-credit';
+    credit.textContent=`— generated for ${meta.label.toLowerCase()} · ${(dominant.val*100).toFixed(0)}% confidence`;
+    poemBox.appendChild(credit);
 
-  document.getElementById('generateBtn').disabled = false;
-  document.getElementById('generateBtnText').textContent = '✦ Generate Vibe Poem';
+    setStatus('live','Live');
+    document.getElementById('generateBtn').disabled=false;
+    document.getElementById('generateBtnText').textContent='✦ Generate Vibe Poem';
+  }, 800);
 });
 
-// ──────────────────────────────────────────────
-// HISTORY
-// ──────────────────────────────────────────────
-function addToHistory(key, meta) {
-  vibeHistory.unshift({ key, meta, time: new Date().toLocaleTimeString() });
-  if (vibeHistory.length > 10) vibeHistory.pop();
-
-  const row = document.getElementById('historyRow');
-  row.innerHTML = '';
-  vibeHistory.forEach((v,i) => {
-    const chip = document.createElement('div');
-    chip.className = 'history-chip';
-    chip.style.borderColor = v.meta.color + '44';
-    chip.style.color = v.meta.color;
-    chip.style.animationDelay = `${i*0.05}s`;
-    chip.title = v.time;
-    chip.textContent = `${v.meta.emoji} ${v.meta.label}`;
+// ── HISTORY ──
+function addToHistory(key,meta){
+  vibeHistory.unshift({key,meta,time:new Date().toLocaleTimeString()});
+  if(vibeHistory.length>10)vibeHistory.pop();
+  const row=document.getElementById('historyRow');
+  row.innerHTML='';
+  vibeHistory.forEach((v,i)=>{
+    const chip=document.createElement('div');
+    chip.className='history-chip';
+    chip.style.borderColor=v.meta.color+'44';chip.style.color=v.meta.color;
+    chip.style.animationDelay=`${i*0.05}s`;chip.title=v.time;
+    chip.textContent=`${v.meta.emoji} ${v.meta.label}`;
     row.appendChild(chip);
   });
 }
 
-// ──────────────────────────────────────────────
-// KICK OFF
-// ──────────────────────────────────────────────
 loadModels();
 </script>
 </body>
